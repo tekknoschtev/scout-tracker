@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scout Pack Attendance</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Navigation -->
+        <nav class="nav">
+            <h1>🏕️ Scout Pack Attendance</h1>
+            <div class="nav-buttons">
+                <button id="admin-btn" class="nav-btn">Admin</button>
+                <button id="checkin-btn" class="nav-btn active">Check In</button>
+            </div>
+        </nav>
+
+        <!-- Admin View -->
+        <div id="admin-view" class="view">
+            <div class="dashboard">
+                <div class="action-buttons">
+                    <button id="new-event-btn" class="btn btn-primary">+ New Event</button>
+                    <button id="manage-scouts-btn" class="btn btn-secondary">Manage Scouts</button>
+                </div>
+
+                <div class="events-section">
+                    <div class="events-header">
+                        <h2>Events</h2>
+                        <div class="events-filter">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="show-past-events">
+                                Show past events
+                            </label>
+                        </div>
+                    </div>
+                    <div id="events-list" class="events-list">
+                        <!-- Events will be populated here -->
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <h3>Quick Actions</h3>
+                    <button id="export-csv-btn" class="btn btn-outline">Export to CSV</button>
+                    <button id="backup-data-btn" class="btn btn-outline">Backup Data</button>
+                    <input type="file" id="restore-data-input" accept=".json" style="display: none;">
+                    <button id="restore-data-btn" class="btn btn-outline">Restore Data</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Check-in View -->
+        <div id="checkin-view" class="view active">
+            <div class="checkin-container">
+                <div class="compact-event-header">
+                    <div class="event-selector-compact">
+                        <select id="event-select" class="event-select">
+                            <option value="">Choose an event...</option>
+                        </select>
+                    </div>
+                    
+                    <div id="event-info" class="event-info-compact hidden">
+                        <div class="event-title-row">
+                            <span id="event-title" class="event-title-compact">Event Name</span>
+                            <span id="event-date" class="event-date-compact">Date</span>
+                        </div>
+                        
+                        <div id="event-instructions" class="event-instructions-compact hidden">
+                            <span class="instructions-icon">📋</span>
+                            <span id="instructions-text" class="instructions-text-compact"></span>
+                            <button id="toggle-instructions" class="toggle-instructions">show</button>
+                        </div>
+                        <div id="event-instructions-full" class="event-instructions-full hidden">
+                            <div class="instructions-header">📋 Instructions:</div>
+                            <div id="instructions-text-full" class="instructions-text"></div>
+                            <button id="hide-instructions" class="toggle-instructions">hide</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="checkin-form" class="checkin-form hidden">
+                    <div class="scouts-checklist">
+                        <div class="checkin-header">
+                            <h3>Select scouts to check in:</h3>
+                            <div class="checkin-den-filter">
+                                <label for="checkin-den-filter-select">Filter by den:</label>
+                                <select id="checkin-den-filter-select">
+                                    <option value="">All Dens</option>
+                                    <option value="Tigers">Tigers</option>
+                                    <option value="Wolves">Wolves</option>
+                                    <option value="Bears">Bears</option>
+                                    <option value="Webelos">Webelos</option>
+                                    <option value="AOL">Arrow of Light</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="scouts-list" class="scouts-list">
+                            <!-- Scout checkboxes will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals -->
+        
+        <!-- New Event Modal -->
+        <div id="new-event-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Create New Event</h3>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <form id="new-event-form">
+                    <div class="form-group">
+                        <label for="event-name">Event Name</label>
+                        <input type="text" id="event-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-event-date">Date</label>
+                        <input type="date" id="new-event-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="event-type">Type</label>
+                        <select id="event-type">
+                            <option value="meeting">Den Meeting</option>
+                            <option value="campout">Campout</option>
+                            <option value="service">Service Project</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="event-description">Description (optional)</label>
+                        <textarea id="event-description" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="event-instructions">Check-in Instructions (optional)</label>
+                        <textarea id="event-instructions" rows="2" placeholder="e.g., Meet at the flagpole after check-in"></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create Event</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Event Modal -->
+        <div id="edit-event-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Edit Event</h3>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <form id="edit-event-form">
+                    <div class="form-group">
+                        <label for="edit-event-name">Event Name</label>
+                        <input type="text" id="edit-event-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-event-date">Date</label>
+                        <input type="date" id="edit-event-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-event-type">Type</label>
+                        <select id="edit-event-type">
+                            <option value="meeting">Den Meeting</option>
+                            <option value="campout">Campout</option>
+                            <option value="service">Service Project</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-event-description">Description (optional)</label>
+                        <textarea id="edit-event-description" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-event-instructions">Check-in Instructions (optional)</label>
+                        <textarea id="edit-event-instructions" rows="2" placeholder="e.g., Meet at the flagpole after check-in"></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Event</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Manage Scouts Modal -->
+        <div id="manage-scouts-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Manage Scouts</h3>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div class="add-scout-section">
+                    <form id="add-scout-form">
+                        <div class="form-row">
+                            <input type="text" id="scout-name" placeholder="Scout Name" required>
+                            <select id="scout-den">
+                                <option value="Tigers">Tigers</option>
+                                <option value="Wolves">Wolves</option>
+                                <option value="Bears">Bears</option>
+                                <option value="Webelos">Webelos</option>
+                                <option value="AOL">Arrow of Light</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary">Add Scout</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="scouts-management">
+                    <div class="scouts-management-header">
+                        <h4>Current Scouts</h4>
+                        <div class="den-filter">
+                            <label for="den-filter-select">Filter by den:</label>
+                            <select id="den-filter-select">
+                                <option value="">All Dens</option>
+                                <option value="Tigers">Tigers</option>
+                                <option value="Wolves">Wolves</option>
+                                <option value="Bears">Bears</option>
+                                <option value="Webelos">Webelos</option>
+                                <option value="AOL">Arrow of Light</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="manage-scouts-list" class="manage-scouts-list">
+                        <!-- Scout management list will be populated here -->
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="app.hideModal('manage-scouts-modal')">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Confirmation Modal -->
+        <div id="confirmation-modal" class="modal">
+            <div class="modal-content confirmation-modal">
+                <div class="confirmation-header">
+                    <div class="confirmation-icon">⚠️</div>
+                    <h3 id="confirmation-title">Confirm Action</h3>
+                </div>
+                <div class="confirmation-body">
+                    <p id="confirmation-message">Are you sure you want to proceed?</p>
+                </div>
+                <div class="confirmation-actions">
+                    <button id="confirmation-cancel" class="btn btn-secondary">Cancel</button>
+                    <button id="confirmation-confirm" class="btn btn-danger">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Container -->
+        <div id="notification-container" class="notification-container"></div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
