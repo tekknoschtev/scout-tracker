@@ -79,6 +79,64 @@ body {
     gap: 1rem;
     margin-bottom: 2rem;
     flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+/* Manage Dropdown */
+.manage-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-toggle {
+    position: relative;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    min-width: 180px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    z-index: 1000;
+    margin-top: 0.25rem;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: transparent;
+    text-align: left;
+    font-size: 0.9rem;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-radius: 0;
+}
+
+.dropdown-item:first-child {
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+
+.dropdown-item:last-child {
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+.dropdown-item:hover {
+    background: #f8f9fa;
+    color: #2c5530;
 }
 
 .events-section {
@@ -747,6 +805,20 @@ body {
     min-width: 100px;
 }
 
+.radio-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin-right: 1rem;
+    font-weight: normal;
+}
+
+.radio-label input[type="radio"] {
+    margin-right: 0.5rem;
+    width: auto;
+    flex: none;
+}
+
 .modal-actions {
     padding: 1.5rem;
     border-top: 1px solid #eee;
@@ -772,6 +844,27 @@ body {
 
 .add-scout-section .form-row input:focus,
 .add-scout-section .form-row select:focus {
+    outline: none;
+    border-color: #4a7c59;
+}
+
+.add-parent-section {
+    padding: 1.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.add-parent-section .form-row input,
+.add-parent-section .form-row select {
+    padding: 0.75rem;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    background: white;
+    transition: border-color 0.3s ease;
+}
+
+.add-parent-section .form-row input:focus,
+.add-parent-section .form-row select:focus {
     outline: none;
     border-color: #4a7c59;
 }
@@ -893,7 +986,116 @@ body {
     font-size: 0.8rem;
 }
 
+/* Parent Management */
+.add-parent-section .form-row input,
+.add-parent-section .form-row select {
+    padding: 0.75rem;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    background: white;
+    transition: border-color 0.3s ease;
+}
+
+.add-parent-section .form-row input:focus,
+.add-parent-section .form-row select:focus {
+    outline: none;
+    border-color: #4a7c59;
+}
+
+.parents-management {
+    padding: 1.5rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.parents-management-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.parents-management-header h4 {
+    color: #2c5530;
+    margin: 0;
+}
+
+.manage-parents-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.parent-group {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.parent-group-header {
+    background: #f8f9fa;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.parent-group-title {
+    font-weight: 600;
+    color: #2c5530;
+    font-size: 1rem;
+}
+
+.parent-group-count {
+    background: #4a7c59;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.den-parents {
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.parent-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.parent-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.parent-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.parent-den {
+    font-size: 0.9rem;
+    color: #666;
+}
+
 /* Den Management */
+.add-den-section {
+    padding: 1.5rem;
+    border-bottom: 1px solid #eee;
+}
+
 .add-den-section .form-row input,
 .add-den-section .form-row select {
     padding: 0.75rem;
@@ -963,6 +1165,11 @@ body {
 }
 
 /* Event Type Management */
+.add-event-type-section {
+    padding: 1.5rem;
+    border-bottom: 1px solid #eee;
+}
+
 .add-event-type-section .form-row input {
     padding: 0.75rem;
     border: 2px solid #ddd;
@@ -1170,6 +1377,15 @@ body {
     
     .action-buttons {
         flex-direction: column;
+    }
+    
+    .dropdown-menu {
+        position: fixed;
+        top: auto;
+        left: 1rem;
+        right: 1rem;
+        width: auto;
+        min-width: auto;
     }
     
     .form-row {
