@@ -962,6 +962,73 @@ body {
     gap: 0.5rem;
 }
 
+/* Event Type Management */
+.add-event-type-section .form-row input {
+    padding: 0.75rem;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    background: white;
+    transition: border-color 0.3s ease;
+}
+
+.add-event-type-section .form-row input:focus {
+    outline: none;
+    border-color: #4a7c59;
+}
+
+.event-types-management {
+    padding: 1.5rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.event-types-management-header {
+    margin-bottom: 1rem;
+}
+
+.event-types-management-header h4 {
+    color: #2c5530;
+    margin: 0;
+}
+
+.manage-event-types-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.event-type-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+}
+
+.event-type-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.event-type-name {
+    font-weight: 500;
+    color: #333;
+    font-size: 1rem;
+}
+
+.event-type-stats {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.event-type-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
 /* Utility classes */
 .hidden {
     display: none !important;

@@ -24,6 +24,7 @@
                     <button id="new-event-btn" class="btn btn-primary">+ New Event</button>
                     <button id="manage-scouts-btn" class="btn btn-secondary">Manage Scouts</button>
                     <button id="manage-dens-btn" class="btn btn-secondary">Manage Dens</button>
+                    <button id="manage-event-types-btn" class="btn btn-secondary">Manage Event Types</button>
                 </div>
 
                 <div class="events-section">
@@ -120,10 +121,7 @@
                     <div class="form-group">
                         <label for="event-type">Type</label>
                         <select id="event-type">
-                            <option value="meeting">Den Meeting</option>
-                            <option value="campout">Campout</option>
-                            <option value="service">Service Project</option>
-                            <option value="other">Other</option>
+                            <!-- Options populated dynamically -->
                         </select>
                     </div>
                     <div class="form-group">
@@ -161,10 +159,7 @@
                     <div class="form-group">
                         <label for="edit-event-type">Type</label>
                         <select id="edit-event-type">
-                            <option value="meeting">Den Meeting</option>
-                            <option value="campout">Campout</option>
-                            <option value="service">Service Project</option>
-                            <option value="other">Other</option>
+                            <!-- Options populated dynamically -->
                         </select>
                     </div>
                     <div class="form-group">
@@ -246,6 +241,35 @@
                 </div>
                 <div class="modal-actions">
                     <button class="btn btn-secondary" onclick="app.hideModal('manage-dens-modal')">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manage Event Types Modal -->
+        <div id="manage-event-types-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Manage Event Types</h3>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div class="add-event-type-section">
+                    <form id="add-event-type-form">
+                        <div class="form-row">
+                            <input type="text" id="event-type-name" placeholder="Event Type Name" required>
+                            <button type="submit" class="btn btn-primary">Add Event Type</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="event-types-management">
+                    <div class="event-types-management-header">
+                        <h4>Current Event Types</h4>
+                    </div>
+                    <div id="manage-event-types-list" class="manage-event-types-list">
+                        <!-- Event type management list will be populated here -->
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="app.hideModal('manage-event-types-modal')">Close</button>
                 </div>
             </div>
         </div>

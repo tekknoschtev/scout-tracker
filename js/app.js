@@ -5,6 +5,7 @@ class ScoutAttendanceApp {
         this.events = [];
         this.attendance = [];
         this.dens = [];
+        this.eventTypes = [];
         
         this.init();
     }
@@ -22,6 +23,7 @@ class ScoutAttendanceApp {
         this.events = JSON.parse(localStorage.getItem('events') || '[]');
         this.attendance = JSON.parse(localStorage.getItem('attendance') || '[]');
         this.dens = JSON.parse(localStorage.getItem('dens') || '[]');
+        this.eventTypes = JSON.parse(localStorage.getItem('eventTypes') || '[]');
         
         // Initialize with standard Cub Scout dens if no dens exist
         if (this.dens.length === 0) {
@@ -34,6 +36,17 @@ class ScoutAttendanceApp {
             ];
             this.saveData();
         }
+        
+        // Initialize with standard event types if no event types exist
+        if (this.eventTypes.length === 0) {
+            this.eventTypes = [
+                { id: 'type_meeting', name: 'Den Meeting', value: 'meeting', order: 1 },
+                { id: 'type_campout', name: 'Campout', value: 'campout', order: 2 },
+                { id: 'type_service', name: 'Service Project', value: 'service', order: 3 },
+                { id: 'type_other', name: 'Other', value: 'other', order: 4 }
+            ];
+            this.saveData();
+        }
     }
 
     saveData() {
@@ -41,6 +54,7 @@ class ScoutAttendanceApp {
         localStorage.setItem('events', JSON.stringify(this.events));
         localStorage.setItem('attendance', JSON.stringify(this.attendance));
         localStorage.setItem('dens', JSON.stringify(this.dens));
+        localStorage.setItem('eventTypes', JSON.stringify(this.eventTypes));
     }
 
     // Event Binding
@@ -53,6 +67,7 @@ class ScoutAttendanceApp {
         document.getElementById('new-event-btn').addEventListener('click', () => this.showModal('new-event-modal'));
         document.getElementById('manage-scouts-btn').addEventListener('click', () => this.showModal('manage-scouts-modal'));
         document.getElementById('manage-dens-btn').addEventListener('click', () => this.showModal('manage-dens-modal'));
+        document.getElementById('manage-event-types-btn').addEventListener('click', () => this.showModal('manage-event-types-modal'));
         document.getElementById('export-csv-btn').addEventListener('click', () => this.exportToCSV());
         document.getElementById('backup-data-btn').addEventListener('click', () => this.backupData());
         document.getElementById('restore-data-btn').addEventListener('click', () => document.getElementById('restore-data-input').click());
@@ -79,6 +94,7 @@ class ScoutAttendanceApp {
         document.getElementById('edit-event-form').addEventListener('submit', (e) => this.handleEditEvent(e));
         document.getElementById('add-scout-form').addEventListener('submit', (e) => this.handleAddScout(e));
         document.getElementById('add-den-form').addEventListener('submit', (e) => this.handleAddDen(e));
+        document.getElementById('add-event-type-form').addEventListener('submit', (e) => this.handleAddEventType(e));
 
         // Check-in functionality
         document.getElementById('event-select').addEventListener('change', (e) => this.handleEventSelect(e));
@@ -122,6 +138,8 @@ class ScoutAttendanceApp {
             document.getElementById('den-filter-select').addEventListener('change', () => this.renderScoutsManagement());
         } else if (modalId === 'manage-dens-modal') {
             this.renderDensManagement();
+        } else if (modalId === 'manage-event-types-modal') {
+            this.renderEventTypesManagement();
         }
     }
 
@@ -136,6 +154,7 @@ class ScoutAttendanceApp {
     // Rendering Methods
     renderViews() {
         this.updateAllDenDropdowns();
+        this.updateAllEventTypeDropdowns();
         this.renderAdminView();
         this.renderCheckinView();
     }
@@ -728,6 +747,174 @@ class ScoutAttendanceApp {
         });
     }
 
+    // Event Type Management
+    handleAddEventType(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('event-type-name').value.trim();
+        
+        if (!name) return;
+
+        // Check if event type name already exists
+        if (this.eventTypes.some(type => type.name.toLowerCase() === name.toLowerCase())) {
+            this.showNotification('An event type with this name already exists!', 'warning', 3000);
+            return;
+        }
+
+        // Generate a value from the name (lowercase, replace spaces with hyphens)
+        const value = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+        const eventType = {
+            id: 'type_' + Date.now(),
+            name: name,
+            value: value,
+            order: this.eventTypes.length + 1
+        };
+
+        this.eventTypes.push(eventType);
+        this.saveData();
+        this.renderEventTypesManagement();
+        this.updateAllEventTypeDropdowns();
+        
+        // Show success notification
+        this.showNotification(`${name} event type has been added!`, 'success', 3000);
+        
+        // Reset form
+        document.getElementById('event-type-name').value = '';
+    }
+
+    renderEventTypesManagement() {
+        const eventTypesList = document.getElementById('manage-event-types-list');
+        
+        if (this.eventTypes.length === 0) {
+            eventTypesList.innerHTML = '<div class="empty-state">No event types created yet.</div>';
+            return;
+        }
+
+        const sortedEventTypes = this.getSortedEventTypes();
+
+        eventTypesList.innerHTML = sortedEventTypes.map(eventType => {
+            const eventsOfType = this.events.filter(e => e.type === eventType.value).length;
+            
+            return `
+                <div class="event-type-item">
+                    <div class="event-type-info">
+                        <div class="event-type-name">${eventType.name}</div>
+                        <div class="event-type-stats">${eventsOfType} event${eventsOfType !== 1 ? 's' : ''}</div>
+                    </div>
+                    <div class="event-type-actions">
+                        <button class="btn btn-outline btn-small" onclick="app.editEventType('${eventType.id}')">Edit</button>
+                        <button class="btn btn-outline btn-small btn-danger" onclick="app.deleteEventType('${eventType.id}')">Delete</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    editEventType(eventTypeId) {
+        const eventType = this.eventTypes.find(t => t.id === eventTypeId);
+        if (!eventType) return;
+
+        const newName = prompt('Enter new event type name:', eventType.name);
+        if (!newName || newName.trim() === '') return;
+        
+        const trimmedName = newName.trim();
+        
+        // Check if new name already exists (excluding current event type)
+        if (this.eventTypes.some(t => t.id !== eventTypeId && t.name.toLowerCase() === trimmedName.toLowerCase())) {
+            this.showNotification('An event type with this name already exists!', 'warning', 3000);
+            return;
+        }
+
+        const oldName = eventType.name;
+        const oldValue = eventType.value;
+        eventType.name = trimmedName;
+        
+        // Generate new value from new name
+        const newValue = trimmedName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        eventType.value = newValue;
+
+        // Update all events that use this event type
+        this.events.forEach(event => {
+            if (event.type === oldValue) {
+                event.type = newValue;
+            }
+        });
+
+        this.saveData();
+        this.renderEventTypesManagement();
+        this.renderAdminView(); // Re-render to show updated event types
+        this.updateAllEventTypeDropdowns();
+        
+        this.showNotification(`Event type renamed from "${oldName}" to "${trimmedName}"!`, 'success', 3000);
+    }
+
+    deleteEventType(eventTypeId) {
+        const eventType = this.eventTypes.find(t => t.id === eventTypeId);
+        if (!eventType) return;
+
+        const eventsOfType = this.events.filter(e => e.type === eventType.value);
+        
+        let confirmMessage = `Are you sure you want to delete "${eventType.name}" event type?`;
+        if (eventsOfType.length > 0) {
+            confirmMessage += `\n\nThis event type has ${eventsOfType.length} event${eventsOfType.length !== 1 ? 's' : ''}. They will be changed to "Other" type.`;
+        }
+
+        this.showConfirmation(
+            'Delete Event Type',
+            confirmMessage,
+            () => {
+                // If there are events using this type, change them to "other"
+                if (eventsOfType.length > 0) {
+                    const otherType = this.eventTypes.find(t => t.value === 'other');
+                    const targetValue = otherType ? otherType.value : 'other';
+                    
+                    eventsOfType.forEach(event => {
+                        event.type = targetValue;
+                    });
+                    
+                    this.showNotification(`${eventsOfType.length} event${eventsOfType.length !== 1 ? 's' : ''} changed to "Other" type.`, 'info', 4000);
+                }
+
+                // Remove the event type
+                this.eventTypes = this.eventTypes.filter(t => t.id !== eventTypeId);
+                
+                this.saveData();
+                this.renderEventTypesManagement();
+                this.renderAdminView(); // Re-render to show updated events
+                this.updateAllEventTypeDropdowns();
+                
+                this.showNotification(`Event type "${eventType.name}" has been deleted.`, 'success', 3000);
+            },
+            'Delete Event Type',
+            'danger'
+        );
+    }
+
+    updateAllEventTypeDropdowns() {
+        const sortedEventTypes = this.getSortedEventTypes();
+        const eventTypeOptions = sortedEventTypes.map(type => `<option value="${type.value}">${type.name}</option>`).join('');
+        
+        // Update all event type dropdowns
+        const selectors = [
+            '#event-type',
+            '#edit-event-type'
+        ];
+        
+        selectors.forEach(selector => {
+            const element = document.querySelector(selector);
+            if (element) {
+                const currentValue = element.value;
+                element.innerHTML = eventTypeOptions;
+                
+                // Restore previous selection if it still exists
+                if (currentValue && sortedEventTypes.some(type => type.value === currentValue)) {
+                    element.value = currentValue;
+                }
+            }
+        });
+    }
+
     // Scout Management
     removeScout(scoutId) {
         const scout = this.scouts.find(s => s.id === scoutId);
@@ -894,6 +1081,10 @@ class ScoutAttendanceApp {
         return this.dens.sort((a, b) => a.order - b.order);
     }
 
+    getSortedEventTypes() {
+        return this.eventTypes.sort((a, b) => a.order - b.order);
+    }
+
     // Export and Backup Methods
     exportToCSV() {
         const csvData = this.generateCSVData();
@@ -933,8 +1124,9 @@ class ScoutAttendanceApp {
             events: this.events,
             attendance: this.attendance,
             dens: this.dens,
+            eventTypes: this.eventTypes,
             exportDate: new Date().toISOString(),
-            version: '2.0'
+            version: '3.0'
         };
 
         const backupData = JSON.stringify(backup, null, 2);
@@ -976,6 +1168,19 @@ class ScoutAttendanceApp {
                                 { id: 'den_bears', name: 'Bears', order: 3 },
                                 { id: 'den_webelos', name: 'Webelos', order: 4 },
                                 { id: 'den_aol', name: 'Arrow of Light', order: 5 }
+                            ];
+                        }
+                        
+                        // Handle event type data (backwards compatibility)
+                        if (backup.eventTypes) {
+                            this.eventTypes = backup.eventTypes;
+                        } else {
+                            // Old backup without event types - initialize with defaults
+                            this.eventTypes = [
+                                { id: 'type_meeting', name: 'Den Meeting', value: 'meeting', order: 1 },
+                                { id: 'type_campout', name: 'Campout', value: 'campout', order: 2 },
+                                { id: 'type_service', name: 'Service Project', value: 'service', order: 3 },
+                                { id: 'type_other', name: 'Other', value: 'other', order: 4 }
                             ];
                         }
                         
