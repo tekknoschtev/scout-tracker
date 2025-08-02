@@ -4,6 +4,7 @@ class ScoutAttendanceApp {
         this.scouts = [];
         this.events = [];
         this.attendance = [];
+        this.dens = [];
         
         this.init();
     }
@@ -20,12 +21,26 @@ class ScoutAttendanceApp {
         this.scouts = JSON.parse(localStorage.getItem('scouts') || '[]');
         this.events = JSON.parse(localStorage.getItem('events') || '[]');
         this.attendance = JSON.parse(localStorage.getItem('attendance') || '[]');
+        this.dens = JSON.parse(localStorage.getItem('dens') || '[]');
+        
+        // Initialize with standard Cub Scout dens if no dens exist
+        if (this.dens.length === 0) {
+            this.dens = [
+                { id: 'den_tigers', name: 'Tigers', order: 1 },
+                { id: 'den_wolves', name: 'Wolves', order: 2 },
+                { id: 'den_bears', name: 'Bears', order: 3 },
+                { id: 'den_webelos', name: 'Webelos', order: 4 },
+                { id: 'den_aol', name: 'Arrow of Light', order: 5 }
+            ];
+            this.saveData();
+        }
     }
 
     saveData() {
         localStorage.setItem('scouts', JSON.stringify(this.scouts));
         localStorage.setItem('events', JSON.stringify(this.events));
         localStorage.setItem('attendance', JSON.stringify(this.attendance));
+        localStorage.setItem('dens', JSON.stringify(this.dens));
     }
 
     // Event Binding
@@ -37,6 +52,7 @@ class ScoutAttendanceApp {
         // Admin actions
         document.getElementById('new-event-btn').addEventListener('click', () => this.showModal('new-event-modal'));
         document.getElementById('manage-scouts-btn').addEventListener('click', () => this.showModal('manage-scouts-modal'));
+        document.getElementById('manage-dens-btn').addEventListener('click', () => this.showModal('manage-dens-modal'));
         document.getElementById('export-csv-btn').addEventListener('click', () => this.exportToCSV());
         document.getElementById('backup-data-btn').addEventListener('click', () => this.backupData());
         document.getElementById('restore-data-btn').addEventListener('click', () => document.getElementById('restore-data-input').click());
@@ -62,6 +78,7 @@ class ScoutAttendanceApp {
         document.getElementById('new-event-form').addEventListener('submit', (e) => this.handleNewEvent(e));
         document.getElementById('edit-event-form').addEventListener('submit', (e) => this.handleEditEvent(e));
         document.getElementById('add-scout-form').addEventListener('submit', (e) => this.handleAddScout(e));
+        document.getElementById('add-den-form').addEventListener('submit', (e) => this.handleAddDen(e));
 
         // Check-in functionality
         document.getElementById('event-select').addEventListener('change', (e) => this.handleEventSelect(e));
@@ -103,6 +120,8 @@ class ScoutAttendanceApp {
             this.renderScoutsManagement();
             // Add den filter event listener when modal opens
             document.getElementById('den-filter-select').addEventListener('change', () => this.renderScoutsManagement());
+        } else if (modalId === 'manage-dens-modal') {
+            this.renderDensManagement();
         }
     }
 
@@ -116,6 +135,7 @@ class ScoutAttendanceApp {
 
     // Rendering Methods
     renderViews() {
+        this.updateAllDenDropdowns();
         this.renderAdminView();
         this.renderCheckinView();
     }
@@ -236,12 +256,13 @@ class ScoutAttendanceApp {
             scoutsByDen[scout.den].push(scout);
         });
 
-        // Sort dens in standard order
-        const denOrder = ['Tigers', 'Wolves', 'Bears', 'Webelos', 'AOL'];
+        // Sort dens by order
         const sortedDens = Object.keys(scoutsByDen).sort((a, b) => {
-            const aIndex = denOrder.indexOf(a);
-            const bIndex = denOrder.indexOf(b);
-            return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
+            const denA = this.dens.find(den => den.name === a);
+            const denB = this.dens.find(den => den.name === b);
+            const orderA = denA ? denA.order : 999;
+            const orderB = denB ? denB.order : 999;
+            return orderA - orderB;
         });
 
         if (sortedDens.length === 0) {
@@ -387,12 +408,13 @@ class ScoutAttendanceApp {
             scoutsByDen[scout.den].push(scout);
         });
 
-        // Sort dens in standard order
-        const denOrder = ['Tigers', 'Wolves', 'Bears', 'Webelos', 'AOL'];
+        // Sort dens by order
         const sortedDens = Object.keys(scoutsByDen).sort((a, b) => {
-            const aIndex = denOrder.indexOf(a);
-            const bIndex = denOrder.indexOf(b);
-            return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
+            const denA = this.dens.find(den => den.name === a);
+            const denB = this.dens.find(den => den.name === b);
+            const orderA = denA ? denA.order : 999;
+            const orderB = denB ? denB.order : 999;
+            return orderA - orderB;
         });
 
         if (sortedDens.length === 0) {
@@ -534,6 +556,176 @@ class ScoutAttendanceApp {
             'Undo Check-in',
             'warning'
         );
+    }
+
+    // Den Management
+    handleAddDen(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('den-name').value.trim();
+        
+        if (!name) return;
+
+        // Check if den name already exists
+        if (this.dens.some(den => den.name.toLowerCase() === name.toLowerCase())) {
+            this.showNotification('A den with this name already exists!', 'warning', 3000);
+            return;
+        }
+
+        const den = {
+            id: 'den_' + Date.now(),
+            name: name,
+            order: this.dens.length + 1
+        };
+
+        this.dens.push(den);
+        this.saveData();
+        this.renderDensManagement();
+        this.updateAllDenDropdowns();
+        
+        // Show success notification
+        this.showNotification(`${name} den has been added!`, 'success', 3000);
+        
+        // Reset form
+        document.getElementById('den-name').value = '';
+    }
+
+    renderDensManagement() {
+        const densList = document.getElementById('manage-dens-list');
+        
+        if (this.dens.length === 0) {
+            densList.innerHTML = '<div class="empty-state">No dens created yet.</div>';
+            return;
+        }
+
+        const sortedDens = this.getSortedDens();
+
+        densList.innerHTML = sortedDens.map(den => {
+            const scoutsInDen = this.scouts.filter(s => s.active && s.den === den.name).length;
+            
+            return `
+                <div class="den-item">
+                    <div class="den-info">
+                        <div class="den-name">${den.name}</div>
+                        <div class="den-stats">${scoutsInDen} scout${scoutsInDen !== 1 ? 's' : ''}</div>
+                    </div>
+                    <div class="den-actions">
+                        <button class="btn btn-outline btn-small" onclick="app.editDen('${den.id}')">Edit</button>
+                        <button class="btn btn-outline btn-small btn-danger" onclick="app.deleteDen('${den.id}')">Delete</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    editDen(denId) {
+        const den = this.dens.find(d => d.id === denId);
+        if (!den) return;
+
+        const newName = prompt('Enter new den name:', den.name);
+        if (!newName || newName.trim() === '') return;
+        
+        const trimmedName = newName.trim();
+        
+        // Check if new name already exists (excluding current den)
+        if (this.dens.some(d => d.id !== denId && d.name.toLowerCase() === trimmedName.toLowerCase())) {
+            this.showNotification('A den with this name already exists!', 'warning', 3000);
+            return;
+        }
+
+        const oldName = den.name;
+        den.name = trimmedName;
+
+        // Update all scouts that belong to this den
+        this.scouts.forEach(scout => {
+            if (scout.den === oldName) {
+                scout.den = trimmedName;
+            }
+        });
+
+        this.saveData();
+        this.renderDensManagement();
+        this.renderScoutsManagement();
+        this.updateAllDenDropdowns();
+        
+        this.showNotification(`Den renamed from "${oldName}" to "${trimmedName}"!`, 'success', 3000);
+    }
+
+    deleteDen(denId) {
+        const den = this.dens.find(d => d.id === denId);
+        if (!den) return;
+
+        const scoutsInDen = this.scouts.filter(s => s.active && s.den === den.name);
+        
+        let confirmMessage = `Are you sure you want to delete "${den.name}" den?`;
+        if (scoutsInDen.length > 0) {
+            confirmMessage += `\n\nThis den has ${scoutsInDen.length} scout${scoutsInDen.length !== 1 ? 's' : ''}. They will need to be reassigned to other dens.`;
+        }
+
+        this.showConfirmation(
+            'Delete Den',
+            confirmMessage,
+            () => {
+                // If there are scouts in this den, we need to handle reassignment
+                if (scoutsInDen.length > 0) {
+                    const remainingDens = this.dens.filter(d => d.id !== denId);
+                    if (remainingDens.length === 0) {
+                        this.showNotification('Cannot delete the last den. Create another den first.', 'error', 4000);
+                        return;
+                    }
+                    
+                    // For now, assign scouts to the first remaining den
+                    const targetDen = remainingDens[0];
+                    scoutsInDen.forEach(scout => {
+                        scout.den = targetDen.name;
+                    });
+                    
+                    this.showNotification(`${scoutsInDen.length} scout${scoutsInDen.length !== 1 ? 's' : ''} reassigned to ${targetDen.name}.`, 'info', 4000);
+                }
+
+                // Remove the den
+                this.dens = this.dens.filter(d => d.id !== denId);
+                
+                this.saveData();
+                this.renderDensManagement();
+                this.renderScoutsManagement();
+                this.updateAllDenDropdowns();
+                
+                this.showNotification(`Den "${den.name}" has been deleted.`, 'success', 3000);
+            },
+            'Delete Den',
+            'danger'
+        );
+    }
+
+    updateAllDenDropdowns() {
+        const sortedDens = this.getSortedDens();
+        const denOptions = sortedDens.map(den => `<option value="${den.name}">${den.name}</option>`).join('');
+        
+        // Update all den dropdowns
+        const selectors = [
+            '#scout-den',
+            '#den-filter-select', 
+            '#checkin-den-filter-select'
+        ];
+        
+        selectors.forEach(selector => {
+            const element = document.querySelector(selector);
+            if (element) {
+                const currentValue = element.value;
+                
+                if (selector === '#den-filter-select' || selector === '#checkin-den-filter-select') {
+                    element.innerHTML = '<option value="">All Dens</option>' + denOptions;
+                } else {
+                    element.innerHTML = denOptions;
+                }
+                
+                // Restore previous selection if it still exists
+                if (currentValue && sortedDens.some(den => den.name === currentValue)) {
+                    element.value = currentValue;
+                }
+            }
+        });
     }
 
     // Scout Management
@@ -698,6 +890,10 @@ class ScoutAttendanceApp {
         return text.substring(0, maxLength).trim() + '...';
     }
 
+    getSortedDens() {
+        return this.dens.sort((a, b) => a.order - b.order);
+    }
+
     // Export and Backup Methods
     exportToCSV() {
         const csvData = this.generateCSVData();
@@ -736,8 +932,9 @@ class ScoutAttendanceApp {
             scouts: this.scouts,
             events: this.events,
             attendance: this.attendance,
+            dens: this.dens,
             exportDate: new Date().toISOString(),
-            version: '1.0'
+            version: '2.0'
         };
 
         const backupData = JSON.stringify(backup, null, 2);
@@ -767,6 +964,20 @@ class ScoutAttendanceApp {
                         this.scouts = backup.scouts;
                         this.events = backup.events;
                         this.attendance = backup.attendance;
+                        
+                        // Handle den data (backwards compatibility)
+                        if (backup.dens) {
+                            this.dens = backup.dens;
+                        } else {
+                            // Old backup without dens - initialize with defaults
+                            this.dens = [
+                                { id: 'den_tigers', name: 'Tigers', order: 1 },
+                                { id: 'den_wolves', name: 'Wolves', order: 2 },
+                                { id: 'den_bears', name: 'Bears', order: 3 },
+                                { id: 'den_webelos', name: 'Webelos', order: 4 },
+                                { id: 'den_aol', name: 'Arrow of Light', order: 5 }
+                            ];
+                        }
                         
                         this.saveData();
                         this.renderViews();

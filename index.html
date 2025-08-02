@@ -23,6 +23,7 @@
                 <div class="action-buttons">
                     <button id="new-event-btn" class="btn btn-primary">+ New Event</button>
                     <button id="manage-scouts-btn" class="btn btn-secondary">Manage Scouts</button>
+                    <button id="manage-dens-btn" class="btn btn-secondary">Manage Dens</button>
                 </div>
 
                 <div class="events-section">
@@ -86,12 +87,7 @@
                             <div class="checkin-den-filter">
                                 <label for="checkin-den-filter-select">Filter by den:</label>
                                 <select id="checkin-den-filter-select">
-                                    <option value="">All Dens</option>
-                                    <option value="Tigers">Tigers</option>
-                                    <option value="Wolves">Wolves</option>
-                                    <option value="Bears">Bears</option>
-                                    <option value="Webelos">Webelos</option>
-                                    <option value="AOL">Arrow of Light</option>
+                                    <!-- Options populated dynamically -->
                                 </select>
                             </div>
                         </div>
@@ -199,11 +195,7 @@
                         <div class="form-row">
                             <input type="text" id="scout-name" placeholder="Scout Name" required>
                             <select id="scout-den">
-                                <option value="Tigers">Tigers</option>
-                                <option value="Wolves">Wolves</option>
-                                <option value="Bears">Bears</option>
-                                <option value="Webelos">Webelos</option>
-                                <option value="AOL">Arrow of Light</option>
+                                <!-- Options populated dynamically -->
                             </select>
                             <button type="submit" class="btn btn-primary">Add Scout</button>
                         </div>
@@ -215,12 +207,7 @@
                         <div class="den-filter">
                             <label for="den-filter-select">Filter by den:</label>
                             <select id="den-filter-select">
-                                <option value="">All Dens</option>
-                                <option value="Tigers">Tigers</option>
-                                <option value="Wolves">Wolves</option>
-                                <option value="Bears">Bears</option>
-                                <option value="Webelos">Webelos</option>
-                                <option value="AOL">Arrow of Light</option>
+                                <!-- Options populated dynamically -->
                             </select>
                         </div>
                     </div>
@@ -230,6 +217,35 @@
                 </div>
                 <div class="modal-actions">
                     <button class="btn btn-secondary" onclick="app.hideModal('manage-scouts-modal')">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manage Dens Modal -->
+        <div id="manage-dens-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Manage Dens</h3>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div class="add-den-section">
+                    <form id="add-den-form">
+                        <div class="form-row">
+                            <input type="text" id="den-name" placeholder="Den Name" required>
+                            <button type="submit" class="btn btn-primary">Add Den</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="dens-management">
+                    <div class="dens-management-header">
+                        <h4>Current Dens</h4>
+                    </div>
+                    <div id="manage-dens-list" class="manage-dens-list">
+                        <!-- Den management list will be populated here -->
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="app.hideModal('manage-dens-modal')">Close</button>
                 </div>
             </div>
         </div>
