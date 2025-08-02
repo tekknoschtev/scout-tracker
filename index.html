@@ -23,6 +23,7 @@
                 <div class="action-buttons">
                     <button id="new-event-btn" class="btn btn-primary">+ New Event</button>
                     <button id="manage-scouts-btn" class="btn btn-secondary">Manage Scouts</button>
+                    <button id="manage-parents-btn" class="btn btn-secondary">Manage Parents</button>
                     <button id="manage-dens-btn" class="btn btn-secondary">Manage Dens</button>
                     <button id="manage-event-types-btn" class="btn btn-secondary">Manage Event Types</button>
                 </div>
@@ -125,6 +126,19 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label>Attendee Type</label>
+                        <div class="form-row">
+                            <label class="radio-label">
+                                <input type="radio" name="attendee-type" value="scouts" checked>
+                                Scouts
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="attendee-type" value="parents">
+                                Parents
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label for="event-description">Description (optional)</label>
                         <textarea id="event-description" rows="3"></textarea>
                     </div>
@@ -161,6 +175,19 @@
                         <select id="edit-event-type">
                             <!-- Options populated dynamically -->
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Attendee Type</label>
+                        <div class="form-row">
+                            <label class="radio-label">
+                                <input type="radio" name="edit-attendee-type" value="scouts" checked>
+                                Scouts
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="edit-attendee-type" value="parents">
+                                Parents
+                            </label>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="edit-event-description">Description (optional)</label>
@@ -212,6 +239,44 @@
                 </div>
                 <div class="modal-actions">
                     <button class="btn btn-secondary" onclick="app.hideModal('manage-scouts-modal')">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manage Parents Modal -->
+        <div id="manage-parents-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Manage Parents</h3>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div class="add-parent-section">
+                    <form id="add-parent-form">
+                        <div class="form-row">
+                            <input type="text" id="parent-name" placeholder="Parent Name" required>
+                            <select id="parent-den">
+                                <!-- Options populated dynamically -->
+                            </select>
+                            <button type="submit" class="btn btn-primary">Add Parent</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="parents-management">
+                    <div class="parents-management-header">
+                        <h4>Current Parents</h4>
+                        <div class="den-filter">
+                            <label for="parent-den-filter-select">Filter by den:</label>
+                            <select id="parent-den-filter-select">
+                                <!-- Options populated dynamically -->
+                            </select>
+                        </div>
+                    </div>
+                    <div id="manage-parents-list" class="manage-parents-list">
+                        <!-- Parent management list will be populated here -->
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="app.hideModal('manage-parents-modal')">Close</button>
                 </div>
             </div>
         </div>

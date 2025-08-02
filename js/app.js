@@ -2,6 +2,7 @@
 class ScoutAttendanceApp {
     constructor() {
         this.scouts = [];
+        this.parents = [];
         this.events = [];
         this.attendance = [];
         this.dens = [];
@@ -20,6 +21,7 @@ class ScoutAttendanceApp {
     // Data Management
     loadData() {
         this.scouts = JSON.parse(localStorage.getItem('scouts') || '[]');
+        this.parents = JSON.parse(localStorage.getItem('parents') || '[]');
         this.events = JSON.parse(localStorage.getItem('events') || '[]');
         this.attendance = JSON.parse(localStorage.getItem('attendance') || '[]');
         this.dens = JSON.parse(localStorage.getItem('dens') || '[]');
@@ -51,6 +53,7 @@ class ScoutAttendanceApp {
 
     saveData() {
         localStorage.setItem('scouts', JSON.stringify(this.scouts));
+        localStorage.setItem('parents', JSON.stringify(this.parents));
         localStorage.setItem('events', JSON.stringify(this.events));
         localStorage.setItem('attendance', JSON.stringify(this.attendance));
         localStorage.setItem('dens', JSON.stringify(this.dens));
@@ -66,6 +69,7 @@ class ScoutAttendanceApp {
         // Admin actions
         document.getElementById('new-event-btn').addEventListener('click', () => this.showModal('new-event-modal'));
         document.getElementById('manage-scouts-btn').addEventListener('click', () => this.showModal('manage-scouts-modal'));
+        document.getElementById('manage-parents-btn').addEventListener('click', () => this.showModal('manage-parents-modal'));
         document.getElementById('manage-dens-btn').addEventListener('click', () => this.showModal('manage-dens-modal'));
         document.getElementById('manage-event-types-btn').addEventListener('click', () => this.showModal('manage-event-types-modal'));
         document.getElementById('export-csv-btn').addEventListener('click', () => this.exportToCSV());
@@ -93,6 +97,7 @@ class ScoutAttendanceApp {
         document.getElementById('new-event-form').addEventListener('submit', (e) => this.handleNewEvent(e));
         document.getElementById('edit-event-form').addEventListener('submit', (e) => this.handleEditEvent(e));
         document.getElementById('add-scout-form').addEventListener('submit', (e) => this.handleAddScout(e));
+        document.getElementById('add-parent-form').addEventListener('submit', (e) => this.handleAddParent(e));
         document.getElementById('add-den-form').addEventListener('submit', (e) => this.handleAddDen(e));
         document.getElementById('add-event-type-form').addEventListener('submit', (e) => this.handleAddEventType(e));
 
@@ -103,7 +108,7 @@ class ScoutAttendanceApp {
         document.getElementById('checkin-den-filter-select').addEventListener('change', () => {
             const eventId = document.getElementById('event-select').value;
             if (eventId) {
-                this.renderScoutsChecklist(eventId);
+                this.renderAttendeesChecklist(eventId);
             }
         });
 
@@ -136,6 +141,10 @@ class ScoutAttendanceApp {
             this.renderScoutsManagement();
             // Add den filter event listener when modal opens
             document.getElementById('den-filter-select').addEventListener('change', () => this.renderScoutsManagement());
+        } else if (modalId === 'manage-parents-modal') {
+            this.renderParentsManagement();
+            // Add den filter event listener when modal opens
+            document.getElementById('parent-den-filter-select').addEventListener('change', () => this.renderParentsManagement());
         } else if (modalId === 'manage-dens-modal') {
             this.renderDensManagement();
         } else if (modalId === 'manage-event-types-modal') {
@@ -180,13 +189,22 @@ class ScoutAttendanceApp {
         eventsList.innerHTML = eventsToShow.map(event => {
             const attendanceRecords = this.attendance.filter(a => a.eventId === event.id);
             const attendanceCount = attendanceRecords.length;
-            const totalScouts = this.scouts.filter(s => s.active).length;
+            const eventAttendeeType = event.attendeeType || 'scouts';
+            const isParentEvent = eventAttendeeType === 'parents';
+            const totalAttendees = isParentEvent ? 
+                this.parents.filter(p => p.active).length : 
+                this.scouts.filter(s => s.active).length;
             const isPastEvent = event.date < today;
             
             // Get attendee details
             const attendees = attendanceRecords.map(record => {
-                const scout = this.scouts.find(s => s.id === record.scoutId);
-                return scout ? { name: scout.name, den: scout.den } : null;
+                if (isParentEvent) {
+                    const parent = this.parents.find(p => p.id === record.parentId);
+                    return parent ? { name: parent.name, den: parent.den } : null;
+                } else {
+                    const scout = this.scouts.find(s => s.id === record.scoutId);
+                    return scout ? { name: scout.name, den: scout.den } : null;
+                }
             }).filter(Boolean);
             
             // Handle description truncation
@@ -197,7 +215,7 @@ class ScoutAttendanceApp {
                 <div class="event-item ${isPastEvent ? 'event-past' : ''}">
                     <div class="event-info">
                         <h4>${event.name}</h4>
-                        <p>${this.formatDate(event.date)} • ${this.capitalizeFirst(event.type)}</p>
+                        <p>${this.formatDate(event.date)} • ${this.capitalizeFirst(event.type)} • ${isParentEvent ? 'Parent' : 'Scout'} Event</p>
                         ${event.description ? `
                             <p id="desc-${event.id}" class="event-description">
                                 ${truncatedDescription}
@@ -219,7 +237,7 @@ class ScoutAttendanceApp {
                     </div>
                     <div class="event-controls">
                         <div class="event-attendance">
-                            ${attendanceCount}/${totalScouts} scouts
+                            ${attendanceCount}/${totalAttendees} ${isParentEvent ? 'parents' : 'scouts'}
                         </div>
                         <div class="event-actions">
                             <button class="btn btn-small btn-outline" onclick="app.editEvent('${event.id}')">Edit</button>
@@ -319,11 +337,15 @@ class ScoutAttendanceApp {
     handleNewEvent(e) {
         e.preventDefault();
         
+        const attendeeTypeRadio = document.querySelector('input[name="attendee-type"]:checked');
+        const attendeeType = attendeeTypeRadio ? attendeeTypeRadio.value : 'scouts';
+        
         const event = {
             id: 'event_' + Date.now(),
             name: document.getElementById('event-name').value,
             date: document.getElementById('new-event-date').value,
             type: document.getElementById('event-type').value,
+            attendeeType: attendeeType,
             description: document.getElementById('event-description').value,
             instructions: document.getElementById('event-instructions').value
         };
@@ -397,10 +419,30 @@ class ScoutAttendanceApp {
         // Show event info and form
         eventInfo.classList.remove('hidden');
         
-        // Render scouts list
-        this.renderScoutsChecklist(eventId);
+        // Render attendees list based on event type
+        this.renderAttendeesChecklist(eventId);
         
         checkinForm.classList.remove('hidden');
+    }
+
+    renderAttendeesChecklist(eventId) {
+        const event = this.events.find(e => e.id === eventId);
+        if (!event) return;
+
+        const attendeeType = event.attendeeType || 'scouts';
+        const isParentEvent = attendeeType === 'parents';
+        
+        // Update header text
+        const checkinHeader = document.querySelector('.checkin-header h3');
+        if (checkinHeader) {
+            checkinHeader.textContent = `Select ${isParentEvent ? 'parents' : 'scouts'} to check in:`;
+        }
+
+        if (isParentEvent) {
+            this.renderParentsChecklist(eventId);
+        } else {
+            this.renderScoutsChecklist(eventId);
+        }
     }
 
     renderScoutsChecklist(eventId) {
@@ -469,6 +511,84 @@ class ScoutAttendanceApp {
                                         <button class="btn btn-small btn-outline undo-checkin" 
                                                 onclick="app.undoCheckin('${eventId}', '${scout.id}')"
                                                 title="Undo check-in for ${scout.name}">
+                                            Undo
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    renderParentsChecklist(eventId) {
+        const parentsList = document.getElementById('scouts-list');
+        const checkinDenFilter = document.getElementById('checkin-den-filter-select');
+        const selectedDen = checkinDenFilter ? checkinDenFilter.value : '';
+        
+        let activeParents = this.parents.filter(p => p.active);
+        const alreadyCheckedIn = this.attendance
+            .filter(a => a.eventId === eventId)
+            .map(a => a.parentId || a.scoutId); // Support both for backwards compatibility
+
+        // Filter by den if selected
+        if (selectedDen) {
+            activeParents = activeParents.filter(p => p.den === selectedDen);
+        }
+
+        // Group parents by den
+        const parentsByDen = {};
+        activeParents.forEach(parent => {
+            if (!parentsByDen[parent.den]) {
+                parentsByDen[parent.den] = [];
+            }
+            parentsByDen[parent.den].push(parent);
+        });
+
+        // Sort dens by order
+        const sortedDens = Object.keys(parentsByDen).sort((a, b) => {
+            const denA = this.dens.find(den => den.name === a);
+            const denB = this.dens.find(den => den.name === b);
+            const orderA = denA ? denA.order : 999;
+            const orderB = denB ? denB.order : 999;
+            return orderA - orderB;
+        });
+
+        if (sortedDens.length === 0) {
+            parentsList.innerHTML = '<div class="empty-state">No parents available for check-in.</div>';
+            return;
+        }
+
+        parentsList.innerHTML = sortedDens.map(den => {
+            const denParents = parentsByDen[den].sort((a, b) => a.name.localeCompare(b.name));
+            const checkedInCount = denParents.filter(parent => alreadyCheckedIn.includes(parent.id)).length;
+            
+            return `
+                <div class="checkin-den-group">
+                    <div class="checkin-den-header">
+                        <div class="checkin-den-title">${den}</div>
+                        <div class="checkin-den-count">${checkedInCount}/${denParents.length}</div>
+                    </div>
+                    <div class="checkin-den-scouts">
+                        ${denParents.map(parent => {
+                            const isCheckedIn = alreadyCheckedIn.includes(parent.id);
+                            return `
+                                <div class="scout-checkbox ${isCheckedIn ? 'checked-in clickable' : 'clickable'}" 
+                                     onclick="${isCheckedIn ? `app.undoParentCheckin('${eventId}', '${parent.id}')` : `app.instantParentCheckin('${eventId}', '${parent.id}')`}">
+                                    <input type="checkbox" 
+                                           id="parent-${parent.id}" 
+                                           value="${parent.id}"
+                                           ${isCheckedIn ? 'checked disabled' : 'disabled'}>
+                                    <label for="parent-${parent.id}">
+                                        ${parent.name}
+                                        ${isCheckedIn ? ' ✓ Already checked in' : ''}
+                                    </label>
+                                    ${isCheckedIn ? `
+                                        <button class="btn btn-small btn-outline undo-checkin" 
+                                                onclick="app.undoParentCheckin('${eventId}', '${parent.id}')"
+                                                title="Undo check-in for ${parent.name}">
                                             Undo
                                         </button>
                                     ` : ''}
@@ -571,6 +691,51 @@ class ScoutAttendanceApp {
                 this.renderAdminView(); // Update admin view counts
                 
                 this.showNotification(`${scout.name} has been unchecked from ${event.name}.`, 'info');
+            },
+            'Undo Check-in',
+            'warning'
+        );
+    }
+
+    instantParentCheckin(eventId, parentId) {
+        const parent = this.parents.find(p => p.id === parentId);
+        if (!parent) return;
+
+        // Add attendance record
+        const timestamp = new Date().toISOString();
+        this.attendance.push({
+            eventId: eventId,
+            parentId: parentId,
+            checkedInAt: timestamp
+        });
+
+        this.saveData();
+        this.renderParentsChecklist(eventId);
+        this.renderAdminView();
+
+        this.showNotification(`${parent.name} checked in successfully!`, 'success', 3000);
+    }
+
+    undoParentCheckin(eventId, parentId) {
+        const parent = this.parents.find(p => p.id === parentId);
+        const event = this.events.find(e => e.id === eventId);
+        
+        if (!parent || !event) return;
+
+        this.showConfirmation(
+            'Undo Check-in',
+            `Are you sure you want to undo the check-in for "${parent.name}" from "${event.name}"?`,
+            () => {
+                // Remove the attendance record
+                this.attendance = this.attendance.filter(a => 
+                    !(a.eventId === eventId && a.parentId === parentId)
+                );
+                
+                this.saveData();
+                this.renderParentsChecklist(eventId);
+                this.renderAdminView(); // Update admin view counts
+                
+                this.showNotification(`${parent.name} has been unchecked from ${event.name}.`, 'info');
             },
             'Undo Check-in',
             'warning'
@@ -724,7 +889,9 @@ class ScoutAttendanceApp {
         // Update all den dropdowns
         const selectors = [
             '#scout-den',
+            '#parent-den',
             '#den-filter-select', 
+            '#parent-den-filter-select',
             '#checkin-den-filter-select'
         ];
         
@@ -733,7 +900,7 @@ class ScoutAttendanceApp {
             if (element) {
                 const currentValue = element.value;
                 
-                if (selector === '#den-filter-select' || selector === '#checkin-den-filter-select') {
+                if (selector === '#den-filter-select' || selector === '#parent-den-filter-select' || selector === '#checkin-den-filter-select') {
                     element.innerHTML = '<option value="">All Dens</option>' + denOptions;
                 } else {
                     element.innerHTML = denOptions;
@@ -935,6 +1102,119 @@ class ScoutAttendanceApp {
         );
     }
 
+    // Parent Management
+    handleAddParent(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('parent-name').value.trim();
+        const den = document.getElementById('parent-den').value;
+        
+        if (!name) return;
+
+        const parent = {
+            id: 'parent_' + Date.now(),
+            name: name,
+            den: den,
+            active: true
+        };
+
+        this.parents.push(parent);
+        this.saveData();
+        this.renderParentsManagement();
+        this.renderAdminView();
+        
+        // Show success notification
+        this.showNotification(`${name} has been added to ${den}!`, 'success', 3000);
+        
+        // Reset form
+        document.getElementById('parent-name').value = '';
+    }
+
+    renderParentsManagement() {
+        const parentsList = document.getElementById('manage-parents-list');
+        const denFilterSelect = document.getElementById('parent-den-filter-select');
+        const selectedDen = denFilterSelect ? denFilterSelect.value : '';
+        
+        let activeParents = this.parents.filter(p => p.active);
+        
+        if (activeParents.length === 0) {
+            parentsList.innerHTML = '<div class="empty-state">No parents added yet.</div>';
+            return;
+        }
+
+        // Filter by den if selected
+        if (selectedDen) {
+            activeParents = activeParents.filter(p => p.den === selectedDen);
+        }
+
+        // Group parents by den
+        const parentsByDen = {};
+        activeParents.forEach(parent => {
+            if (!parentsByDen[parent.den]) {
+                parentsByDen[parent.den] = [];
+            }
+            parentsByDen[parent.den].push(parent);
+        });
+
+        // Sort dens by order
+        const sortedDens = Object.keys(parentsByDen).sort((a, b) => {
+            const denA = this.dens.find(den => den.name === a);
+            const denB = this.dens.find(den => den.name === b);
+            const orderA = denA ? denA.order : 999;
+            const orderB = denB ? denB.order : 999;
+            return orderA - orderB;
+        });
+
+        if (sortedDens.length === 0) {
+            parentsList.innerHTML = '<div class="empty-state">No parents found for the selected den.</div>';
+            return;
+        }
+
+        parentsList.innerHTML = sortedDens.map(den => {
+            const denParents = parentsByDen[den].sort((a, b) => a.name.localeCompare(b.name));
+            
+            return `
+                <div class="parent-group">
+                    <div class="parent-group-header">
+                        <div class="parent-group-title">${den}</div>
+                        <div class="parent-group-count">${denParents.length}</div>
+                    </div>
+                    <div class="den-parents">
+                        ${denParents.map(parent => `
+                            <div class="parent-item">
+                                <div class="parent-info">
+                                    <div class="parent-name">${parent.name}</div>
+                                </div>
+                                <button class="btn btn-outline btn-small" onclick="app.removeParent('${parent.id}')">
+                                    Remove
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    removeParent(parentId) {
+        const parent = this.parents.find(p => p.id === parentId);
+        if (!parent) return;
+
+        this.showConfirmation(
+            'Remove Parent',
+            `Are you sure you want to remove "${parent.name}" from the pack? This action can be undone by re-adding the parent.`,
+            () => {
+                parent.active = false;
+                this.saveData();
+                this.renderParentsManagement();
+                this.renderAdminView();
+                this.showNotification(`${parent.name} has been removed from the pack.`, 'success');
+            },
+            'Remove Parent',
+            'danger'
+        );
+    }
+
     // Event Management
     editEvent(eventId) {
         const event = this.events.find(e => e.id === eventId);
@@ -946,6 +1226,13 @@ class ScoutAttendanceApp {
         document.getElementById('edit-event-type').value = event.type;
         document.getElementById('edit-event-description').value = event.description || '';
         document.getElementById('edit-event-instructions').value = event.instructions || '';
+
+        // Set attendee type radio button
+        const attendeeType = event.attendeeType || 'scouts';
+        const attendeeTypeRadio = document.querySelector(`input[name="edit-attendee-type"][value="${attendeeType}"]`);
+        if (attendeeTypeRadio) {
+            attendeeTypeRadio.checked = true;
+        }
 
         // Store the event ID for the update
         this.editingEventId = eventId;
@@ -961,10 +1248,14 @@ class ScoutAttendanceApp {
         const event = this.events.find(e => e.id === this.editingEventId);
         if (!event) return;
 
+        const attendeeTypeRadio = document.querySelector('input[name="edit-attendee-type"]:checked');
+        const attendeeType = attendeeTypeRadio ? attendeeTypeRadio.value : 'scouts';
+
         // Update the event
         event.name = document.getElementById('edit-event-name').value;
         event.date = document.getElementById('edit-event-date').value;
         event.type = document.getElementById('edit-event-type').value;
+        event.attendeeType = attendeeType;
         event.description = document.getElementById('edit-event-description').value;
         event.instructions = document.getElementById('edit-event-instructions').value;
 
@@ -1121,12 +1412,13 @@ class ScoutAttendanceApp {
     backupData() {
         const backup = {
             scouts: this.scouts,
+            parents: this.parents,
             events: this.events,
             attendance: this.attendance,
             dens: this.dens,
             eventTypes: this.eventTypes,
             exportDate: new Date().toISOString(),
-            version: '3.0'
+            version: '4.0'
         };
 
         const backupData = JSON.stringify(backup, null, 2);
@@ -1157,6 +1449,14 @@ class ScoutAttendanceApp {
                         this.events = backup.events;
                         this.attendance = backup.attendance;
                         
+                        // Handle parent data (backwards compatibility with v4.0+)
+                        if (backup.parents) {
+                            this.parents = backup.parents;
+                        } else {
+                            // Old backup without parents - initialize as empty
+                            this.parents = [];
+                        }
+                        
                         // Handle den data (backwards compatibility)
                         if (backup.dens) {
                             this.dens = backup.dens;
@@ -1183,6 +1483,13 @@ class ScoutAttendanceApp {
                                 { id: 'type_other', name: 'Other', value: 'other', order: 4 }
                             ];
                         }
+                        
+                        // Ensure all events have an attendeeType field (backwards compatibility)
+                        this.events.forEach(event => {
+                            if (!event.attendeeType) {
+                                event.attendeeType = 'scouts'; // Default to scouts for old events
+                            }
+                        });
                         
                         this.saveData();
                         this.renderViews();
@@ -1313,6 +1620,15 @@ if (app.scouts.length === 0) {
         { id: 'scout_5', name: 'Jake Brown', den: 'Webelos', active: true }
     ];
     
+    // Add sample parent data
+    app.parents = [
+        { id: 'parent_1', name: 'John Smith', den: 'Tigers', active: true },
+        { id: 'parent_2', name: 'Lisa Johnson', den: 'Wolves', active: true },
+        { id: 'parent_3', name: 'Mark Wilson', den: 'Bears', active: true },
+        { id: 'parent_4', name: 'Jennifer Davis', den: 'Tigers', active: true },
+        { id: 'parent_5', name: 'Robert Brown', den: 'Webelos', active: true }
+    ];
+    
     // Add a sample event for today
     const today = new Date().toISOString().split('T')[0];
     app.events = [
@@ -1321,6 +1637,7 @@ if (app.scouts.length === 0) {
             name: 'Den Meeting',
             date: today,
             type: 'meeting',
+            attendeeType: 'scouts',
             description: 'Regular weekly den meeting',
             instructions: 'After checking in, please gather in the main hall. Bring your handbook and a pencil.'
         },
@@ -1329,8 +1646,18 @@ if (app.scouts.length === 0) {
             name: 'Summer Campout',
             date: '2025-08-15',
             type: 'campout',
+            attendeeType: 'scouts',
             description: 'Weekend camping trip',
             instructions: 'Meet at the flagpole after check-in. Make sure you have your sleeping bag and camp gear!'
+        },
+        {
+            id: 'event_3',
+            name: 'Parent Meeting',
+            date: today,
+            type: 'meeting',
+            attendeeType: 'parents',
+            description: 'Monthly parent planning meeting',
+            instructions: 'After checking in, please proceed to the conference room.'
         }
     ];
 
@@ -1349,6 +1676,16 @@ if (app.scouts.length === 0) {
         {
             eventId: 'event_1',
             scoutId: 'scout_4',
+            checkedInAt: new Date().toISOString()
+        },
+        {
+            eventId: 'event_3',
+            parentId: 'parent_1',
+            checkedInAt: new Date().toISOString()
+        },
+        {
+            eventId: 'event_3',
+            parentId: 'parent_3',
             checkedInAt: new Date().toISOString()
         }
     ];
