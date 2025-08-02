@@ -90,9 +90,26 @@ scout-attendance/
 ├── css/
 │   └── styles.css      # Application styling
 ├── js/
-│   └── app.js          # Application logic
-├── package.json        # Development dependencies (Jest for testing)
-├── test-setup.js       # Test configuration
+│   ├── app.js          # Main application entry point
+│   ├── Utils.js        # Utility functions
+│   ├── DataManager.js  # Data persistence and operations
+│   ├── UIManager.js    # DOM interactions and modals
+│   ├── EventManager.js # Event creation and management
+│   ├── AttendanceManager.js # Check-in/out logic
+│   ├── NotificationManager.js # User notifications
+│   ├── RenderManager.js # View rendering
+│   ├── ConfigManager.js # Default configurations
+│   ├── ScoutManager.js  # Scout management
+│   └── DenEventTypeManager.js # Den and event type management
+├── tests/              # Test suite
+│   ├── setup/          # Test configuration
+│   ├── utils/          # Test utilities and helpers
+│   ├── managers/       # Unit tests for manager classes
+│   └── integration/    # Integration tests
+├── .github/
+│   └── workflows/
+│       └── test.yml    # GitHub Actions CI
+├── package.json        # Dependencies and scripts
 └── README.md          # This file
 ```
 
@@ -147,10 +164,13 @@ scout-attendance/
 - Edge 79+
 
 ### Development Features
-- **Test-Driven Development** setup with Jest
+- **Test-Driven Development** with comprehensive Jest test suite
+- **Modular Architecture** with specialized manager classes
 - **ES6+ JavaScript** with modern syntax
 - **Mobile-first responsive design**
 - **Accessibility considerations** throughout
+- **CI/CD Pipeline** with GitHub Actions
+- **Code Coverage** reporting and monitoring
 
 ## 🎯 Use Cases
 
@@ -197,19 +217,59 @@ This application was built iteratively with focus on user experience:
 - ✅ CSV export and data backup
 - ✅ Comprehensive error handling
 
-### Phase 4: Polish & Testing
+### Phase 4: Modular Refactoring & Testing
+- ✅ Modular architecture with 9 specialized managers
+- ✅ Comprehensive unit and integration test suite
 - ✅ Consistent design language
 - ✅ Performance optimizations
 - ✅ Accessibility improvements
-- ✅ Test framework setup
+- ✅ CI/CD pipeline with GitHub Actions
+
+## 🧪 Testing
+
+The application includes a comprehensive test suite covering:
+
+### Unit Tests
+- **Utils**: Date formatting, validation, and utility functions
+- **DataManager**: localStorage operations, CSV export, data migration
+- **EventManager**: Event creation, validation, and management logic
+- **AttendanceManager**: Check-in/out workflows and attendance tracking
+- **ConfigManager**: Default configurations and sample data generation
+
+### Integration Tests
+- **ScoutAttendanceApp**: End-to-end application flow and manager coordination
+
+### Running Tests
+```bash
+# Install dependencies
+npm install
+
+# Run all tests
+npm test
+
+# Run tests in watch mode  
+npm run test:watch
+
+# Generate coverage report
+npm run test:coverage
+
+# Serve app locally for testing
+npm run serve
+```
+
+### Coverage Goals
+- **Business Logic**: 90%+ coverage for core managers
+- **Utility Functions**: 95%+ coverage for Utils class
+- **Integration**: Key user workflows tested end-to-end
 
 ## 🤝 Contributing
 
 This is a focused single-purpose application. The codebase prioritizes:
 - **Simplicity** over feature complexity
 - **Reliability** over cutting-edge tech
-- **Usability** over advanced functionality
+- **Usability** over advanced functionality  
 - **Offline capability** over cloud features
+- **Test Coverage** over rapid feature development
 
 ## 📄 License
 

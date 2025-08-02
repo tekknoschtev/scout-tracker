@@ -1,0 +1,40 @@
+{
+  "name": "scout-attendance-app",
+  "version": "1.0.0",
+  "description": "A web application for tracking scout attendance at den meetings and events",
+  "main": "index.html",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "serve": "python -m http.server 8000 || python3 -m http.server 8000"
+  },
+  "keywords": [
+    "scouts",
+    "attendance",
+    "cub-scouts",
+    "tracking"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^30.0.0-alpha.6",
+    "jest-environment-jsdom": "^30.0.0-alpha.6"
+  },
+  "overrides": {
+    "glob": "^11.0.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": ["<rootDir>/tests/setup/jest.setup.js"],
+    "collectCoverageFrom": [
+      "js/**/*.js",
+      "!js/app_old.js"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov", "html"],
+    "testMatch": [
+      "<rootDir>/tests/**/*.test.js"
+    ]
+  }
+}
