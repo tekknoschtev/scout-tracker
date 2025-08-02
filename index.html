@@ -22,10 +22,17 @@
             <div class="dashboard">
                 <div class="action-buttons">
                     <button id="new-event-btn" class="btn btn-primary">+ New Event</button>
-                    <button id="manage-scouts-btn" class="btn btn-secondary">Manage Scouts</button>
-                    <button id="manage-parents-btn" class="btn btn-secondary">Manage Parents</button>
-                    <button id="manage-dens-btn" class="btn btn-secondary">Manage Dens</button>
-                    <button id="manage-event-types-btn" class="btn btn-secondary">Manage Event Types</button>
+                    <div class="manage-dropdown">
+                        <button id="manage-dropdown-btn" class="btn btn-secondary dropdown-toggle">
+                            Manage ▼
+                        </button>
+                        <div id="manage-dropdown-menu" class="dropdown-menu">
+                            <button id="manage-scouts-btn" class="dropdown-item">👦 Scouts</button>
+                            <button id="manage-parents-btn" class="dropdown-item">👨‍👩‍👧‍👦 Parents</button>
+                            <button id="manage-dens-btn" class="dropdown-item">🏕️ Dens</button>
+                            <button id="manage-event-types-btn" class="dropdown-item">📋 Event Types</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="events-section">

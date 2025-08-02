@@ -68,10 +68,35 @@ class ScoutAttendanceApp {
 
         // Admin actions
         document.getElementById('new-event-btn').addEventListener('click', () => this.showModal('new-event-modal'));
-        document.getElementById('manage-scouts-btn').addEventListener('click', () => this.showModal('manage-scouts-modal'));
-        document.getElementById('manage-parents-btn').addEventListener('click', () => this.showModal('manage-parents-modal'));
-        document.getElementById('manage-dens-btn').addEventListener('click', () => this.showModal('manage-dens-modal'));
-        document.getElementById('manage-event-types-btn').addEventListener('click', () => this.showModal('manage-event-types-modal'));
+        
+        // Manage dropdown
+        document.getElementById('manage-dropdown-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleManageDropdown();
+        });
+        
+        // Manage dropdown items
+        document.getElementById('manage-scouts-btn').addEventListener('click', () => {
+            this.hideManageDropdown();
+            this.showModal('manage-scouts-modal');
+        });
+        document.getElementById('manage-parents-btn').addEventListener('click', () => {
+            this.hideManageDropdown();
+            this.showModal('manage-parents-modal');
+        });
+        document.getElementById('manage-dens-btn').addEventListener('click', () => {
+            this.hideManageDropdown();
+            this.showModal('manage-dens-modal');
+        });
+        document.getElementById('manage-event-types-btn').addEventListener('click', () => {
+            this.hideManageDropdown();
+            this.showModal('manage-event-types-modal');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', () => {
+            this.hideManageDropdown();
+        });
         document.getElementById('export-csv-btn').addEventListener('click', () => this.exportToCSV());
         document.getElementById('backup-data-btn').addEventListener('click', () => this.backupData());
         document.getElementById('restore-data-btn').addEventListener('click', () => document.getElementById('restore-data-input').click());
@@ -127,6 +152,9 @@ class ScoutAttendanceApp {
         document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
         document.getElementById(`${viewName}-view`).classList.add('active');
 
+        // Reset instructions to collapsed state when switching views
+        this.hideFullInstructions();
+
         // Refresh view content
         if (viewName === 'admin') {
             this.renderAdminView();
@@ -158,6 +186,17 @@ class ScoutAttendanceApp {
         // Reset forms
         const form = document.querySelector(`#${modalId} form`);
         if (form) form.reset();
+    }
+
+    // Dropdown Management
+    toggleManageDropdown() {
+        const dropdown = document.getElementById('manage-dropdown-menu');
+        dropdown.classList.toggle('show');
+    }
+
+    hideManageDropdown() {
+        const dropdown = document.getElementById('manage-dropdown-menu');
+        dropdown.classList.remove('show');
     }
 
     // Rendering Methods
@@ -263,7 +302,9 @@ class ScoutAttendanceApp {
                 `<option value="${event.id}">${event.name} - ${this.formatDate(event.date)}</option>`
             ).join('');
 
-        // Hide checkin form initially
+        // Reset event selector and hide event info and checkin form
+        eventSelect.value = '';
+        document.getElementById('event-info').classList.add('hidden');
         document.getElementById('checkin-form').classList.add('hidden');
     }
 
@@ -388,6 +429,9 @@ class ScoutAttendanceApp {
         const eventId = e.target.value;
         const checkinForm = document.getElementById('checkin-form');
         const eventInfo = document.getElementById('event-info');
+        
+        // Reset instructions to collapsed state when switching events
+        this.hideFullInstructions();
         
         if (!eventId) {
             checkinForm.classList.add('hidden');
